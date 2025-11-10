@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>GitOps Demo Dashboard</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; text-align:center; padding:40px; }
+    button { padding:10px 16px; margin:8px; font-size:16px; }
+    pre { text-align:left; width:80%; margin:20px auto; background:#0b0b0b; color:#00ff88; padding:12px; border-radius:6px; min-height:120px; }
+  </style>
+</head>
+<body>
+  <h1 style="color:green">GitOps Deployment Dashboard</h1>
+  <p><strong>Repo:</strong> github.com/yourusername/gitops-demo-project</p>
+  <p><strong>Live hosting:</strong> Vercel (cloud) — shows site is running</p>
+  <div>
+    <button id="deployBtn">Deploy to Kubernetes</button>
+    <button id="rollbackBtn">Rollback</button>
+    <button id="showCI">Show CI Logs</button>
+  </div>
+  <pre id="logOutput">Console output will appear here when you press a button.</pre>
+
+  <script>
+    const log = document.getElementById('logOutput');
+    document.getElementById('deployBtn').onclick = () => {
+      log.textContent = "";
+      append("Triggered deployment from Git (GitOps).");
+      append("-> CI started: building image...");
+      append("-> Pushing image to container registry (cloud)...");
+      append("-> ArgoCD/Flux detected repo change and synced manifests to cluster...");
+      append("-> kubectl apply -f k8s/deployment.yml");
+      append("Deployment status: ✅ SUCCESS (2 replicas running)");
+    };
+    document.getElementById('rollbackBtn').onclick = () => {
+      log.textContent = "";
+      append("Initiating rollback via Git revert...");
+      append("-> ArgoCD/Flux applied previous manifest...");
+      append("Rollback status: ✅ SUCCESS (restored previous version)");
+    };
+    document.getElementById('showCI').onclick = () => {
+      log.textContent = "";
+      append("[CI] Job: build-and-simulate-deploy");
+      append("[CI] Step: Checkout repository");
+      append("[CI] Step: Run unit checks (simulated) => OK");
+      append("[CI] Step: Simulate 'kubectl apply -f k8s/' => OK");
+      append("[CI] Build finished: Image pushed to registry (simulated)");
+    };
+    function append(txt){ log.textContent += txt + "\\n"; }
+  </script>
+</body>
+</html>
