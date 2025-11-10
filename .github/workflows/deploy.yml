@@ -1,4 +1,4 @@
-name: CI - Deploy to Vercel (Simulated)
+name: Deploy to Vercel (CI for GitOps Demo)
 
 on:
   push:
@@ -6,30 +6,14 @@ on:
       - main
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout the repo
         uses: actions/checkout@v3
 
-      - name: CI: Simulate build
-        run: |
-          echo "### CI: Building application..."
-          sleep 1
-          echo "### CI: Build complete."
+      - name: Install Vercel CLI
+        run: npm install -g vercel
 
-      - name: CI: Simulate container push
-        run: |
-          echo "### CI: Pushing image to registry (simulated)..."
-          sleep 1
-          echo "Pushed: registry.example.com/youruser/gitops-demo:latest"
-
-      - name: CI: Simulate kubectl apply
-        run: |
-          echo "### CI: Applying k8s manifests..."
-          ls k8s || true
-          echo "Applied: k8s/deployment.yml"
-          echo "Applied: k8s/service.yml"
-
-      - name: Finished
-        run: echo "CI simulation finished ✅"
+      - name: Deploy site to Vercel
+        run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
