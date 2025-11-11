@@ -2,52 +2,131 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>GitOps Demo Dashboard</title>
+  <title>GitOps Kubernetes Deployment</title>
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; text-align:center; padding:40px; }
-    button { padding:10px 16px; margin:8px; font-size:16px; }
-    pre { text-align:left; width:80%; margin:20px auto; background:#0b0b0b; color:#00ff88; padding:12px; border-radius:6px; min-height:120px; }
+    :root { --bg:#0f111a; --card:#1a1f2e; --text:#e2e8f0; --accent:#4ade80; }
+    .light { --bg:#f6f9ff; --card:#ffffff; --text:#1a1a1a; --accent:#2563eb; }
+
+    body {
+      margin:0; padding:0;
+      font-family: 'Poppins', sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      transition:0.3s;
+      text-align:center;
+    }
+    .container { width:90%; max-width:900px; margin:30px auto; }
+    .card {
+      background:var(--card);
+      padding:18px; border-radius:10px; margin-top:18px;
+      box-shadow:0 0 12px rgba(0,0,0,0.2);
+    }
+    button {
+      background:var(--accent); border:none; padding:12px 18px; margin:6px;
+      font-size:16px; border-radius:6px; cursor:pointer; font-weight:600;
+    }
+    button:hover { opacity:0.8; }
+    #logOutput {
+      background:#000; height:200px; border:1px solid #333;
+      overflow:auto; padding:12px; margin-top:16px; border-radius:8px;
+      font-family:monospace; color:#4ade80; text-align:left;
+      white-space:pre-line;
+    }
+    .toggle { position:absolute; top:15px; right:20px; cursor:pointer; }
+    #toast {
+      visibility:hidden; min-width:250px; background:#22c55e; color:#000;
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      padding:12px; border-radius:6px; font-weight:600;
+    }
+    #toast.show { visibility:visible; animation:fade 0.5s, fade 0.5s 2.5s reverse; }
+    @keyframes fade { from{opacity:0;} to{opacity:1;} }
+
+    table {
+      width:100%; margin-top:15px; border-collapse:collapse;
+    }
+    th, td { padding:10px; border-bottom:1px solid #444; }
+    th { background:#222; }
+    .pod-run { color:#4ade80; font-weight:bold; }
+    .pod-wait { color:#facc15; font-weight:bold; }
   </style>
 </head>
-<body>
-  <h1>Welcome to my Gitops project </h1>
-  <h1>Hello Everyone</h1>
-  <h1 style="color:green">GitOps Deployment Dashboard</h1>
-  <p><strong>Repo:</strong> github.com/yourusername/gitops-demo-project</p>
-  <p><strong>Live hosting:</strong> Vercel (cloud) — shows site is running</p>
-  <div>
-    <button id="deployBtn">Deploy to Kubernetes</button>
-    <button id="rollbackBtn">Rollback</button>
-    <button id="showCI">Show CI Logs</button>
-  </div>
-  <pre id="logOutput">Console output will appear here when you press a button.</pre>
 
-  <script>
-    const log = document.getElementById('logOutput');
-    document.getElementById('deployBtn').onclick = () => {
-      log.textContent = "";
-      append("Triggered deployment from Git (GitOps).");
-      append("-> CI started: building image...");
-      append("-> Pushing image to container registry (cloud)...");
-      append("-> ArgoCD/Flux detected repo change and synced manifests to cluster...");
-      append("-> kubectl apply -f k8s/deployment.yml");
-      append("Deployment status: ✅ SUCCESS (2 replicas running)");
-    };
-    document.getElementById('rollbackBtn').onclick = () => {
-      log.textContent = "";
-      append("Initiating rollback via Git revert...");
-      append("-> ArgoCD/Flux applied previous manifest...");
-      append("Rollback status: ✅ SUCCESS (restored previous version)");
-    };
-    document.getElementById('showCI').onclick = () => {
-      log.textContent = "";
-      append("[CI] Job: build-and-simulate-deploy");
-      append("[CI] Step: Checkout repository");
-      append("[CI] Step: Run unit checks (simulated) => OK");
-      append("[CI] Step: Simulate 'kubectl apply -f k8s/' => OK");
-      append("[CI] Build finished: Image pushed to registry (simulated)");
-    };
-    function append(txt){ log.textContent += txt + "\\n"; }
-  </script>
+<body>
+<div class="toggle" onclick="toggleTheme()">🌓 Switch Theme</div>
+
+<div class="container">
+  <h1>☸ GitOps Deployment Dashboard</h1>
+  <p style="color:var(--accent);font-weight:600;">CI/CD + Kubernetes + Cloud Simulation</p>
+
+  <div class="card">
+    <button onclick="deploy()">Deploy</button>
+    <button onclick="rollback()">Rollback</button>
+    <button onclick="showCI()">Show CI Logs</button>
+    <button onclick="simulateError()">Simulate Cloud Error</button>
+
+    <div id="logOutput">System Ready...</div>
+
+    <h3>Pod Status (Kubernetes)</h3>
+    <table>
+      <tr><th>Pod</th><th>Status</th></tr>
+      <tr><td>frontend-5f9d8b</td><td class="pod-run">Running</td></tr>
+      <tr><td>backend-8c7d2a</td><td class="pod-run">Running</td></tr>
+      <tr><td>ci-runner-2k3x9c</td><td class="pod-wait">Pending</td></tr>
+    </table>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const log = document.getElementById('logOutput');
+const toast = t => {
+  let x=document.getElementById("toast");
+  x.innerText=t; x.className="show";
+  setTimeout(()=>x.className="",3000);
+};
+const append = t => { log.textContent+=t+"\n"; log.scrollTop=log.scrollHeight; };
+
+function deploy(){
+  log.textContent="";
+  append("🔄 Triggering GitOps Deployment...");
+  setTimeout(()=>append("🐳 Docker build started..."),600);
+  setTimeout(()=>append("☁ Uploading to cloud registry..."),1200);
+  setTimeout(()=>append("☸ Kubernetes applying manifests..."),1800);
+  setTimeout(()=>append("✅ Deployment completed (All pods running)"),2600);
+  setTimeout(()=>toast("Deployment Successful ✅"),2700);
+}
+
+function rollback(){
+  log.textContent="";
+  append("♻ Reverting last commit...");
+  setTimeout(()=>append("🔁 Syncing last stable state to cluster..."),1000);
+  setTimeout(()=>append("✅ Rollback successful"),1800);
+  setTimeout(()=>toast("Rollback Completed ✅"),1900);
+}
+
+function showCI(){
+  log.textContent="";
+  append("[CI] Running Tests... ✅");
+  setTimeout(()=>append("[CI] Building Image... ✅"),700);
+  setTimeout(()=>append("[CI] Pushing to Cloud... ✅"),1200);
+  setTimeout(()=>append("[CI] Deploy Triggered... ✅"),1700);
+}
+
+function simulateError(){
+  log.textContent="";
+  append("⚠ Error: Cloud authentication failed!");
+  setTimeout(()=>append("❌ Vercel/K8s access denied: token expired"),600);
+  setTimeout(()=>append("🔁 Retrying..."),1400);
+  setTimeout(()=>append("✅ Issue resolved after key rotation"),2300);
+  setTimeout(()=>append("🚀 Deployment resumed successfully!"),3000);
+  setTimeout(()=>toast("Cloud issue resolved ✅"),3100);
+}
+
+function toggleTheme(){
+  document.body.classList.toggle("light");
+}
+</script>
+
 </body>
 </html>
